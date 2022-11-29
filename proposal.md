@@ -8,7 +8,7 @@ layout: default
 
 ## Title
 
-Parallel Triangle Rasterizer (Wei-Ting Tang, Yiyun Wang)
+Parallel 2048 Solver (Wei-Ting Tang)
 
 ## URL
 
@@ -16,62 +16,50 @@ Parallel Triangle Rasterizer (Wei-Ting Tang, Yiyun Wang)
 
 ## Summary
 
-We are going to create an optimized parallel implementation of a triangle rasterizer on the GPU platform, and perform a deep analysis of the performance characteristics.
+I am going to create a parallel solver of the 2048 game using OpenMP, and perform a deep analysis of the performance characteristics.
 
 ## Background
 
-The triangle rasterization process is a common way of shading computer graphics. It is computationally intense because a high-quality computer image usually contains thousands and even millions of triangles, so computation efficiency becomes a matter. A rasterization pipeline includes the following steps:
+2048 is a sliding tile puzzle game, and the objective of the game is to combine the numbered tiles to create higher tiles, as large as possible.
 
-1. Convert the vertices of the triangle to raster space
-2. Iterate through all of the pixels and check if the pixel is covered by the triangle
-3. Conduct the depth-buffer test and update the pixel attribute accordingly
+A 2048 solver simulates a few "future steps" to determine the best next move. Given the current board, it will try to slide all the directions, namely right, left, up, and down, and generate a new tile at every empty tile to get all of the possible next states. Then, repeat the above steps a few times (e.g., depth = 8), and calculate the "heuristics" score of each move. The various heuristic scores, such as open squares and large values on the edge, are weighted and combined into a comprehensive score, determining how "good" the board position is.
 
-We can conduct parallelism either across pixels or across triangles. Both of these strategies would benefit from GPU parallel computing, but it also creates extra costs of synchronizing the states and maintaining the dependency. We will introduce more details of the challenge in the below section.
+The simulation steps are independent, so it has a huge potential to be parallelized.
 
 ## Challenge
 
-Unlike assignment 2, triangle rasterization could lead to a more unbalanced workflow. For example, to rasterize an extremely “skewed” triangle that locates from the bottom left to the top right, the rasterizer will iterate through almost all pixels, but the triangle only covers small proportion of them (i.e., the diagonal of the screen). That gives us more potential improvements if we can come up with a more sophisticated algorithm to determine the triangle coverage.
+The solver creates many tasks; however, parallelism is not intuitive. The eval function will be called recursively, creating a tremendous amount of calculation. The workload of each step grows exponentially, depending on the number of empty tiles on a given board. This causes the workload to be highly imbalanced, and the tremendous number of tasks makes the context switch costs significantly large.
 
-Moreover, triangles are not entirely independent of each other. A triangle can be generated from a bigger polygon, which
-means some of the triangles shares the same edge or boundary. It can cause duplicate emissions at the pixels located on
-the boundary. A potential solution is to use the top-left rule introduced by OpenGL to deal with this problem. However,
-it needs to split the triangle into upper and lower parts, and it increases the difficulty of parallelism in the
-perspective of synchronization bound and memory accesses.
-
-Although the problem itself seems not too hard to parallelize, it is not that obvious to balance the work flow since it requires high memory accesses and synchronization.
+My goal is to tradeoff between parallel computing and overhead cost, and take advantage of the high number of cores on the bridge computer as much as possible.
 
 ## Resources
 
-We are going to develop a sequential version of the triangle rasterizer using the starter code and tutorial outlined [here](https://www.scratchapixel.com/code.php?id=26&origin=/lessons/3d-basic-rendering/rasterization-practical-implementation). We are also going to refer to course materials of 15462 Computer Graphics about implementation of rasterization pipeline and its optimization techniques. 
-
-When evaluating the performance of our implementation, we are going to use the GHC machine cluster.
-
+This [post](https://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048/22498940#22498940) discusses the mechanism details of the 2048 solver, and this [repo](https://github.com/nneonneo/2048-ai) implemented the 2048 solver in C++. I will start at this repo and optimize the core algorithm to run on the high-count core computer.
 
 ## Deliverables
 
 ### Plan to achieve
 
-- Implement a fully functional parallel triangle rasterizer
-- Achieve 30 FPS rendering with 3840 x 2160 resolution and 10k triangles
-- Speedup performance analysis and graphs of different number of triangles and resolutions
+- Finish 300 steps in 8 seconds on average
+- Graph of performance versus different thread count
+- Live or video demo of solver with UI
 
 ### Hope to achieve
 
-- Achieve 60 FPS rendering with 3840 x 2160 resolution and 10k triangles
-- Scale well with higher resolutions and with millions of triangles (i.e., no significant performance drop-off)
-- Real-time rendering animation for demo
+- Finish 300 steps in 4 seconds on average
+- Break the overhead barrier of high thread count
 
 ## Platform
 
-C++ and Cuda are suitable for our implementation because we can easily use Cuda to conduct parallel computing on Nvidia GPU on GHC machines.
+OpenMP is suitable for the project since we can easily distribute the tasks to different cores (threads) on bridge computers.
 
 ## Schedule
 
 | Week | Plan |
 | -----| ----- |
-| Week 1 (11/6 - 11/12) | Submit proposal and build up our benchmark sequence implementation |
-| Week 2 (11/13 - 11/19) | Build a naive parallel implementation and analyze the bottleneck |
-| Week 3 (11/20 - 11/26) | Build a more complicated version and finish milestone report |
-| Week 4 (11/27 - 12/3) | Optimize our implementation to make sure it performs well on normally scaled inputs |
-| Week 5 (12/4 - 12/10) | Handle the huge input data and deal with potential memory bound |
-| Week 6 (12/11 - 12/17) | Analyze the implementation with different inputs and finish final report |
+| Week 1 (11/6 - 11/12) | Submit the proposal and research on the topic |
+| Week 2 (11/13 - 11/19) | Build up the sequential implementation that runs on bridge computers |
+| Week 3 (11/20 - 11/26) | Develop a naive parallel implementation and submit the milestone report |
+| Week 4 (11/27 - 12/3) | Optimize parallel implementations to utilize high-count cores and analyze the bottleneck |
+| Week 5 (12/4 - 12/10) | Finalize the parallel version and apply different experiments to it |
+| Week 6 (12/11 - 12/17) | Finish and submit the final report |

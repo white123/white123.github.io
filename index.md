@@ -2,14 +2,14 @@
 layout: default
 ---
 
-# Parallel Triangle Rasterizer
+# Parallel 2048 Solver
 
 ## Team Members
 
-Wei-Ting Tang, Yiyun Wang
+Wei-Ting Tang
 
 - [Proposal](./proposal.html)
-- Milestone Report
+- [Milestone Report](./milestone.html)
 - Final Report
 
 <!-- 
