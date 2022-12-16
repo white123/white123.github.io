@@ -10,7 +10,7 @@ Wei-Ting Tang
 
 - [Proposal](./proposal.html)
 - [Milestone Report](./milestone.html)
-- Final Report
+- [Final Report](./report.pdf)
 
 <!-- 
 Text can be **bold**, _italic_, or ~~strikethrough~~.
